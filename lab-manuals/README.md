@@ -148,7 +148,7 @@ systemctl restart nginx
 Edit the color definitions in `templates/lab-manual.latex` to match your branding:
 
 ```latex
-\definecolor{korblue}{HTML}{1a5276}     % Headings, links
+\definecolor{labblue}{HTML}{1a5276}     % Headings, links
 \definecolor{korgray}{HTML}{566573}     % Headers, footers
 \definecolor{coverblue}{HTML}{0d2137}   % Cover page background
 ```

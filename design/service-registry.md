@@ -133,11 +133,11 @@ Not user-facing. These services support all other tiers and run continuously.
 
 | # | Service | Host | Port | ARC Purpose | Fallback |
 |---|---------|------|------|-------------|----------|
-| 70 | Active Directory (DC1) | DC1 | 389 | **Primary directory** — user accounts, group membership, machine auth. Foundation of role-gating. | Local accounts, LDAP fallback to DC2 |
-| 71 | Active Directory (DC2) | DC2 | 389 | **Directory replica** — redundant AD for high availability. | DC1 primary |
-| 72 | Unbound DNS | FIREWALL | 53 | **Primary DNS** — local resolution for all *.lab.example.com services. | Hosts files, DC1/DC2 fallback |
+| 70 | Active Directory (DC-1) | DC-1 | 389 | **Primary directory** — user accounts, group membership, machine auth. Foundation of role-gating. | Local accounts, LDAP fallback to DC-2 |
+| 71 | Active Directory (DC-2) | DC-2 | 389 | **Directory replica** — redundant AD for high availability. | DC-1 primary |
+| 72 | Unbound DNS | FIREWALL | 53 | **Primary DNS** — local resolution for all *.lab.example.com services. | Hosts files, DC-1/DC-2 fallback |
 | 73 | Kea DHCP | FIREWALL | 67 | **IP assignment** — DHCP for all VLANs, pushes DNS servers and search domains. | Static IP assignment |
-| 74 | LDAP Account Manager | Server-2 | 8890 | **AD management UI** — user provisioning, group membership changes without PowerShell. | PowerShell on DC1/DC2 |
+| 74 | LDAP Account Manager | Server-2 | 8890 | **AD management UI** — user provisioning, group membership changes without PowerShell. | PowerShell on DC-1/DC-2 |
 | 75 | Central Proxy | Server-2 | 8443 | **Reverse proxy** — nginx + Authentik forward-auth, single entry point for all web services. | Direct service access by port |
 
 ### Monitoring Stack
@@ -150,21 +150,21 @@ Not user-facing. These services support all other tiers and run continuously.
 | 79 | node_exporter (Server-1) | Server-1 | 9100 | **System metrics** — CPU, memory, disk, network for Server-1. | Manual `top`/`df` checks |
 | 80 | node_exporter (Server-2) | Server-2 | 9100 | **System metrics** — CPU, memory, disk, network for Server-2. | Manual `top`/`df` checks |
 | 81 | node_exporter (workstation) | workstation | 9100 | **System metrics** — CPU, memory, disk, network for workstation. | Manual `top`/`df` checks |
-| 82 | ipmi_exporter | Server-2 | 9290 | **BMC metrics** — temperatures, fans, power draw from IMM/iLO. | Manual BMC console checks |
+| 82 | ipmi_exporter | Server-2 | 9290 | **BMC metrics** — temperatures, fans, power draw from BMC. | Manual BMC checks |
 | 83 | snmp_exporter | Server-2 | 9116 | **Network metrics** — switch port stats, firewall interface stats via SNMPv3. | Manual switch console |
 | 84 | nut_exporter | Server-2 | 9199 | **UPS metrics** — battery charge, load, voltage, runtime. | Manual UPS LCD panel |
 | 85 | blackbox_exporter | Server-2 | 9115 | **ICMP probes** — gateway and external reachability (pre-collapse). | Manual ping |
 | 86 | speedtest_exporter | Server-2 | 9192 | **WAN bandwidth** — 5-minute interval speed tests (pre-collapse only). | Manual speedtest |
 | 87 | asterisk_exporter | pbx-1 | 9200 | **PBX metrics** — call channels, registrations, SIP trunk status. | Manual `asterisk -r` |
-| 88 | ilo_power_exporter | Server-2 | 9417 | **Power metrics** — HP iLO 3 RIBCL scrape for Server-2 power draw. | Manual iLO console |
+| 88 | ilo_power_exporter | Server-2 | 9417 | **Power metrics** — BMC RIBCL scrape for Server-2 power draw. | Manual BMC console |
 | 89 | asus_wifi_exporter | Server-2 | 9193 | **WiFi metrics** — client counts, signal strength, bandwidth via SSH. | Manual WiFi admin panel |
 
 ### Out-of-Band Management
 
 | # | Service | Host | Port | ARC Purpose | Fallback |
 |---|---------|------|------|-------------|----------|
-| 90 | FIREWALL IMM | firewall-imm | 443 | **FIREWALL remote console** — IPMI power control, SOL console, hardware status. | Physical console |
-| 91 | Server-1 IMM | server-1-imm | 443 | **Server-1 remote console** — IPMI power control, VGA text console. | Physical console |
+| 90 | FIREWALL BMC | firewall-bmc | 443 | **FIREWALL remote console** — IPMI power control, SOL console, hardware status. | Physical console |
+| 91 | Server-1 BMC | server-1-bmc | 443 | **Server-1 remote console** — IPMI power control, VGA text console. | Physical console |
 | 92 | Server-2 iLO | server-2-ilo | 80 | **Server-2 remote console** — IPMI power control, KVM, virtual serial port. | Physical console |
 
 ### Developer & Operational Tools
@@ -185,7 +185,7 @@ Not user-facing. These services support all other tiers and run continuously.
 | Proxy Gateway | Pre-collapse only | Tor SOCKS5 proxy — useless without internet |
 | WiFi Capture | Diagnostic tool | Packet capture — used only for troubleshooting |
 | Lab Softphone | Derivative | WebRTC client for FreePBX (counted under FreePBX) |
-| SIP Phones (x3) | Hardware | Grandstream GXP1630, Cisco 7942G, Cisco 7945G — endpoints, not services |
+| SIP Phones (x3) | Hardware | SIP desk phone (model A), SIP desk phone (model B), SIP desk phone (model C) — endpoints, not services |
 | Lab Documentation | Meta | MkDocs site about the lab itself |
 | Archivist | Design phase | Corpus management dashboard (workstation) — not deployed |
 
@@ -214,6 +214,6 @@ Not user-facing. These services support all other tiers and run continuously.
 | workstation | 5 | Admin/ARCengine | 64 GB | Medium — GPU inference, TTS, Archivist |
 | pbx-1 | 2 | Voice comms | 4 GB | High — FreePBX, asterisk_exporter |
 | switch-1 | 1 | Network fabric | — | Critical — all wired connectivity |
-| DC1/DC2 | 2 | Directory | 4 GB ea | Critical — authentication for all services |
+| DC-1/DC-2 | 2 | Directory | 4 GB ea | Critical — authentication for all services |
 
 **Risk:** Server-2 hosts 56 of 97 services. Server-2 failure is a catastrophic event affecting every tier.

@@ -46,7 +46,7 @@
 
 % ── Colors ──
 \usepackage[dvipsnames,svgnames,x11names]{xcolor}
-\definecolor{korblue}{HTML}{1a5276}
+\definecolor{labblue}{HTML}{1a5276}
 \definecolor{korgray}{HTML}{566573}
 \definecolor{plannedorange}{HTML}{e67e22}
 \definecolor{seealsogreen}{HTML}{27ae60}
@@ -67,16 +67,16 @@
 % ── Section formatting ──
 \usepackage{titlesec}
 \titleformat{\chapter}[display]
-  {\normalfont\huge\bfseries\color{korblue}}
+  {\normalfont\huge\bfseries\color{labblue}}
   {\chaptertitlename\ \thechapter}{20pt}{\Huge}
 \titleformat{\section}
-  {\normalfont\Large\bfseries\color{korblue}}
+  {\normalfont\Large\bfseries\color{labblue}}
   {\thesection}{1em}{}
 \titleformat{\subsection}
-  {\normalfont\large\bfseries\color{korblue!80}}
+  {\normalfont\large\bfseries\color{labblue!80}}
   {\thesubsection}{1em}{}
 \titleformat{\subsubsection}
-  {\normalfont\normalsize\bfseries\color{korblue!60}}
+  {\normalfont\normalsize\bfseries\color{labblue!60}}
   {\thesubsubsection}{1em}{}
 
 % ── TOC depth ──
@@ -87,9 +87,9 @@
 \usepackage{hyperref}
 \hypersetup{
   colorlinks=true,
-  linkcolor=korblue,
-  urlcolor=korblue!70,
-  citecolor=korblue,
+  linkcolor=labblue,
+  urlcolor=labblue!70,
+  citecolor=labblue,
   bookmarks=true,
   bookmarksnumbered=true,
   pdfstartview=FitH
@@ -181,8 +181,8 @@
 
 % Note/info box
 \newtcolorbox{notebox}{
-  colback=korblue!5,
-  colframe=korblue!40,
+  colback=labblue!5,
+  colframe=labblue!40,
   coltitle=white,
   fonttitle=\bfseries,
   title=Note,

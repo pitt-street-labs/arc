@@ -20,9 +20,9 @@ Every user interaction follows the same pattern regardless of role: authenticate
 
 | Component | Service | Host | Status |
 |-----------|---------|------|--------|
-| Web Portal | Pitt Street Labs Portal (Flask) | Server-2:8080 | Deployed |
+| Web Portal | Reference Lab Portal (Flask) | Server-2:8080 | Deployed |
 | SSO / IdP | Authentik (OIDC, forward-auth) | Server-2:9443 | Deployed |
-| Directory | Active Directory (DC1/DC2) | DC1/DC2 | Deployed |
+| Directory | Active Directory (DC-1/DC-2) | DC-1/DC-2 | Deployed |
 | Full-text Search | Manticore Search | Server-2:8120 | Deployed |
 | Central Proxy | nginx + Authentik outpost | Server-2:8443 | Deployed |
 
@@ -198,7 +198,7 @@ Step 7: ACT (optional)
 
 ## ARC-001 Hardware Manifest
 
-ARC-001 is the Pitt Street Labs homelab — the first production ARC environment.
+ARC-001 is the reference homelab — the first production ARC environment.
 
 ### 6U Cabinet (rack-mounted, top to bottom)
 
@@ -207,9 +207,9 @@ ARC-001 is the Pitt Street Labs homelab — the first production ARC environment
 | 1U | Blank panel | — | Cable management |
 | 1U | managed L2 switch (48-port GbE, 4x SFP) (switch-1) | Network fabric | 48-port managed switch, 7 VLANs, LACP trunks, QoS |
 | 1U | CyberPower PR1500LCDRT2U | Power protection | UPS, NUT monitored, ~18 min runtime at load |
-| 1U | IBM x3250 M3 (FIREWALL) | Network edge | OPNsense — DNS (Unbound), DHCP (Kea), VPN (WireGuard), IDS (Suricata), NUT |
-| 1U | enterprise-server-2 (rack-mount, 96GB RAM, iLO 3) (Server-2) | Primary app server | 128 GB RAM, 44 containers, Authentik, Grafana, 60+ services |
-| 1U | IBM x3550 M3 (Server-1) | Knowledge/media server | 64 GB RAM, 15+ containers, Kiwix, Atlas, Calibre, Manyfold |
+| 1U | enterprise-firewall (1U rack-mount, 16GB RAM) | Network edge | OPNsense — DNS (Unbound), DHCP (Kea), VPN (WireGuard), IDS (Suricata), NUT |
+| 1U | enterprise-server-2 (rack-mount, 96GB RAM, BMC) (Server-2) | Primary app server | 128 GB RAM, 44 containers, Authentik, Grafana, 60+ services |
+| 1U | enterprise-server-1 (1U rack-mount, 64GB RAM) | Knowledge/media server | 64 GB RAM, 15+ containers, Kiwix, Atlas, Calibre, Manyfold |
 
 ### Cabinet-Adjacent
 
@@ -244,9 +244,9 @@ Internet ←→ Fiber Modem ←→ FIREWALL (OPNsense)
 |--------|-------------|-----------|
 | managed L2 switch (48-port GbE, 4x SFP) | ~40 W | ~65 W |
 | CyberPower UPS | — (provides power) | 1500 VA / 1000 W capacity |
-| FIREWALL (x3250 M3) | ~80 W | ~120 W |
+| FIREWALL (enterprise-firewall) | ~80 W | ~120 W |
 | Server-2 (enterprise-server-2) | ~200 W | ~350 W |
-| Server-1 (x3550 M3) | ~150 W | ~250 W |
+| Server-1 (enterprise-server-1) | ~150 W | ~250 W |
 | workstation Ultra (idle) | ~80 W | ~350 W (GPU load) |
 | **Cabinet total** | **~470 W** | **~785 W** |
 | **Full system** | **~550 W** | **~1135 W** |

@@ -1,0 +1,61 @@
+name: Content Safety Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan-identifiers:
+    name: Scan for real identifiers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for real infrastructure identifiers
+        run: |
+          echo "Scanning for real infrastructure identifiers..."
+          if grep -rPi \
+            '172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+|korlogos|int\.korlogos|jcarlson|\benema.combatant\b|\bnode1\b|\bnode2\b|\bfw1\b|\bsw1\b|\bpbx1\b|\bz590\b|\bbig-boi\b' \
+            --include='*.md' --include='*.sh' --include='*.html' \
+            --include='*.lua' --include='*.latex' --include='*.yaml' \
+            --include='*.yml' --include='*.txt' \
+            --exclude-dir='.git' \
+            .; then
+            echo ""
+            echo "BLOCKED: Real infrastructure identifiers detected in tracked files."
+            exit 1
+          fi
+          echo "OK: No real identifiers found."
+
+      - name: Check for credential patterns
+        run: |
+          echo "Scanning for credential patterns..."
+          if grep -rPi \
+            'password\s*[:=]\s*[^\s<{][^\s]{5,}|api[_-]?key\s*[:=]\s*[0-9a-f]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}' \
+            --include='*.md' --include='*.sh' --include='*.html' \
+            --include='*.lua' --include='*.latex' --include='*.yaml' \
+            --include='*.yml' \
+            --exclude-dir='.git' \
+            .; then
+            echo ""
+            echo "BLOCKED: Potential credentials detected in tracked files."
+            exit 1
+          fi
+          echo "OK: No credential patterns found."
+
+      - name: Check for private keys
+        run: |
+          echo "Scanning for private key material..."
+          if grep -rl \
+            'BEGIN.*PRIVATE KEY\|BEGIN RSA\|BEGIN DSA\|BEGIN EC PRIVATE' \
+            --include='*.md' --include='*.sh' --include='*.pem' \
+            --include='*.key' --include='*.yaml' --include='*.yml' \
+            --exclude-dir='.git' \
+            . 2>/dev/null; then
+            echo ""
+            echo "BLOCKED: Private key material detected."
+            exit 1
+          fi
+          echo "OK: No private key material found."

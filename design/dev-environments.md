@@ -258,7 +258,7 @@ VMs provide complete desktop environments with GUI IDEs. Accessed via Guacamole 
 
 **Use cases:**
 - AD/GPO management scripts
-- PowerShell automation for DC1/DC2
+- PowerShell automation for DC-1/DC-2
 - Windows-specific tool development
 - .NET applications for ARC services
 

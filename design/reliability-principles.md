@@ -75,7 +75,7 @@ When the MySQL instance backing OpenEMR dies in year 4, the SQLite export file i
 |------|----------------|---------------|
 | Patient records | MySQL (OpenEMR) | SQLite: patients, encounters, allergies, medications |
 | Community credentials | PostgreSQL (Vaultwarden) | Encrypted SQLite (already has bitwarden export) |
-| User accounts & groups | Active Directory (DC1/DC2) | SQLite: users, groups, memberships (from LDIF) |
+| User accounts & groups | Active Directory (DC-1/DC-2) | SQLite: users, groups, memberships (from LDIF) |
 | Governance records | PostgreSQL (Wiki.js) | Markdown files + SQLite index |
 | Farm data | MySQL (FarmOS/Drupal) | SQLite: fields, harvests, livestock, water sources |
 | Financial records | PostgreSQL (Firefly III) | SQLite: transactions, accounts, categories |

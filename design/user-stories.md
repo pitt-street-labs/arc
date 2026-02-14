@@ -8,7 +8,7 @@ This document defines what the ARC provides, who uses it, why it matters, and wh
 
 The ARC is a self-sufficient, off-grid environment designed to sustain a Dunbar group (~150 people) after a societal collapse. It combines solar power, diesel backup, battery storage, mesh communications, offline knowledge, medical capability, food production, manufacturing, and governance into a single integrated system.
 
-The Pitt Street Labs homelab is a working prototype. Every story in this document either maps to a service running today or identifies a gap that must be closed.
+The reference homelab is a working prototype. Every story in this document either maps to a service running today or identifies a gap that must be closed.
 
 ## How to Read This Document
 
@@ -18,7 +18,7 @@ Each story follows a hybrid format:
 2. **User story** — The formal "As a / I want / So that" decomposition.
 3. **Acceptance criteria** — Observable outcomes. If these are true, the capability works.
 4. **Prerequisites** — What systems, hardware, or integrations must exist.
-5. **Lab mapping** — Which Pitt Street Labs services fulfill this today, if any.
+5. **Lab mapping** — Which reference lab services fulfill this today, if any.
 
 ### Priority Matrix
 
@@ -341,7 +341,7 @@ These capabilities prevent death or serious harm. Their absence is not acceptabl
 | Enterprise CA TLS certificate | infra | live |
 | GPG-encrypted offline backup | infra | live |
 
-**Lab Mapping:** Vaultwarden (Server-2:8222) — fully operational. Quadlet-managed, Enterprise CA TLS, LUKS-encrypted volume, SSO via Authentik. Offline backup at `/media/labadmin/external-storage/secrets/lab-credentials.yaml.asc`. This capability is fully realized today.
+**Lab Mapping:** Vaultwarden (Server-2:8222) — fully operational. Quadlet-managed, Enterprise CA TLS, LUKS-encrypted volume, SSO via Authentik. Offline backup at `/media/labadmin/external-storage/secrets/<encrypted-credentials-file>`. This capability is fully realized today.
 
 ---
 
@@ -411,7 +411,7 @@ Loss of these capabilities seriously degrades the group's ability to function.
 ### US-11: VoIP Phone Call Between Two ARC Buildings
 **Priority:** P1/R0 | **Category:** Comms
 
-> **Scenario:** Maria in the clinic needs to reach the supply depot about an insulin shipment. She picks up the Grandstream phone on her desk, dials extension 200, and the Cisco phone in the depot rings. Tom answers. They coordinate the delivery schedule in a 3-minute call. No cell towers. No internet. Just two phones, a PBX, and a VLAN. The call quality is crystal clear because QoS on the switch prioritizes voice traffic over everything else.
+> **Scenario:** Maria in the clinic needs to reach the supply depot about an insulin shipment. She picks up the SIP desk phone on her desk, dials extension 200, and the SIP desk phone in the depot rings. Tom answers. They coordinate the delivery schedule in a 3-minute call. No cell towers. No internet. Just two phones, a PBX, and a VLAN. The call quality is crystal clear because QoS on the switch prioritizes voice traffic over everything else.
 
 **As an** ARC resident, **I want** to make phone calls between buildings using desk phones, **so that** I can communicate instantly without walking across the compound.
 
@@ -427,12 +427,12 @@ Loss of these capabilities seriously degrades the group's ability to function.
 | Requirement | Type | Status |
 |-------------|------|--------|
 | FreePBX/Asterisk PBX | software | live |
-| SIP desk phones (Grandstream, Cisco) | hardware | live |
+| SIP desk phones (various manufacturers) | hardware | live |
 | VoIP VLAN (200) with QoS | infra | live |
 | WebRTC softphone (SIP.js) | software | live |
-| TFTP provisioning for Cisco phones | infra | live |
+| TFTP provisioning for SIP desk phones | infra | live |
 
-**Lab Mapping:** FreePBX (pbx-1:80) — IncrediblePBX 2025, Asterisk, extensions 100/200/300/702. Grandstream GXP1630 (ext 100), Cisco 7942G (ext 200), Cisco 7945G (ext 300). Lab Softphone (portal:8443/softphone) — browser-based WebRTC (ext 702). VLAN 200 with QoS. Fully operational.
+**Lab Mapping:** FreePBX (pbx-1:80) — PBX distribution, Asterisk, extensions 100/200/300/702. SIP desk phone (model A) (ext 100), SIP desk phone (model B) (ext 200), SIP desk phone (model C) (ext 300). Lab Softphone (portal:8443/softphone) — browser-based WebRTC (ext 702). VLAN 200 with QoS. Fully operational.
 
 ---
 
@@ -627,7 +627,7 @@ Loss of these capabilities seriously degrades the group's ability to function.
 | Per-service OIDC/LDAP integration | integration | live |
 | LDAP Account Manager for user provisioning | software | live |
 
-**Lab Mapping:** Authentik (Server-2:9443) — SSO with OIDC providers, forward-auth proxy, AD LDAP sync. Active Directory on DC1/DC2. Central-proxy (Server-2:8443) with nginx forward-auth for 42+ services. LDAP Account Manager (Server-2:8890) for account provisioning. Fully operational.
+**Lab Mapping:** Authentik (Server-2:9443) — SSO with OIDC providers, forward-auth proxy, AD LDAP sync. Active Directory on DC-1/DC-2. Central-proxy (Server-2:8443) with nginx forward-auth for 42+ services. LDAP Account Manager (Server-2:8890) for account provisioning. Fully operational.
 
 ---
 
@@ -770,7 +770,7 @@ Loss of these capabilities seriously degrades the group's ability to function.
 ### US-24: DNS Resolves Even if Primary Resolver Fails
 **Priority:** P1/R0 | **Category:** Infra
 
-> **Scenario:** FIREWALL, which runs the primary Unbound DNS resolver, needs a firmware update and will be offline for 10 minutes. Before the update, the operator verifies that DC1 and DC2 (the Active Directory domain controllers) are serving DNS for all `lab.example.com` and `lab.example.com` zones. She reboots FIREWALL. During the 10 minutes it's down, every device on the network seamlessly fails over to DC1 (10.0.20.11) or DC2 (10.0.20.21) — because DHCP pushes all three resolvers to every client. When FIREWALL comes back, it resumes as primary. Zero DNS resolution failures.
+> **Scenario:** FIREWALL, which runs the primary Unbound DNS resolver, needs a firmware update and will be offline for 10 minutes. Before the update, the operator verifies that DC-1 and DC-2 (the Active Directory domain controllers) are serving DNS for all `lab.example.com` and `lab.example.com` zones. She reboots FIREWALL. During the 10 minutes it's down, every device on the network seamlessly fails over to DC-1 (10.0.20.11) or DC-2 (10.0.20.21) — because DHCP pushes all three resolvers to every client. When FIREWALL comes back, it resumes as primary. Zero DNS resolution failures.
 
 **As a** network operator, **I want** DNS to keep working even if the primary resolver goes down, **so that** name resolution never fails during maintenance or outages.
 
@@ -786,13 +786,13 @@ Loss of these capabilities seriously degrades the group's ability to function.
 | Requirement | Type | Status |
 |-------------|------|--------|
 | FIREWALL Unbound (primary resolver) | software | live |
-| DC1 AD DNS (secondary) | software | live |
-| DC2 AD DNS (tertiary) | software | live |
+| DC-1 AD DNS (secondary) | software | live |
+| DC-2 AD DNS (tertiary) | software | live |
 | Kea DHCP pushing all 3 resolvers | infra | live |
 | DNS sync script (Unbound → AD) | software | live |
 | DNS monitoring in Uptime Kuma | software | live |
 
-**Lab Mapping:** Three resolvers: FIREWALL Unbound (10.0.10.1), DC1 (10.0.20.11), DC2 (10.0.20.21). AD-integrated zones `lab.example.com` (93 records) and `lab.example.com` (3 records). Sync script on DC1 runs every 6 hours. DHCP pushes all 3 DNS servers on VLANs 10/20/30/240. Fully operational.
+**Lab Mapping:** Three resolvers: FIREWALL Unbound (10.0.10.1), DC-1 (10.0.20.11), DC-2 (10.0.20.21). AD-integrated zones `lab.example.com` (93 records) and `lab.example.com` (3 records). Sync script on DC-1 runs every 6 hours. DHCP pushes all 3 DNS servers on VLANs 10/20/30/240. Fully operational.
 
 ---
 
@@ -1506,7 +1506,7 @@ These capabilities enable governance, justice, trade, manufacturing, and cultura
 
 ## Appendix A: Lab Capability Inventory → Story Mapping
 
-This table maps every relevant Pitt Street Labs service to the user stories it supports.
+This table maps every relevant reference lab service to the user stories it supports.
 
 | Service | Host | Stories |
 |---------|------|---------|
@@ -1525,10 +1525,10 @@ This table maps every relevant Pitt Street Labs service to the user stories it s
 | Unbound DNS | FIREWALL | US-24 |
 | NUT UPS | FIREWALL | US-09 |
 | FreePBX / Asterisk | pbx-1 | US-11 |
-| Grandstream GXP1630 | gxp1630 | US-11 |
-| Cisco 7942G / 7945G | cisco | US-11 |
+| SIP desk phone (model A) | sip-phone-a | US-11 |
+| SIP desk phone (model B) / 7945G | sip-phone-bc | US-11 |
 | Lab Softphone | portal | US-11 |
-| DC1 / DC2 (AD DNS) | DC1/DC2 | US-18, US-24 |
+| DC-1 / DC-2 (AD DNS) | DC-1/DC-2 | US-18, US-24 |
 | Vaultwarden | Server-2 | US-08 |
 | Authentik SSO | Server-2 | US-18, US-06, US-19 |
 | LDAP Account Manager | Server-2 | US-18 |

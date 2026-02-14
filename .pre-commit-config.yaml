@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ['--maxkb=10000']
+
+  - repo: local
+    hooks:
+      - id: no-real-identifiers
+        name: Check for real infrastructure identifiers
+        entry: bash -c 'grep -nPi "172\.16\.\d|korlogos|int\.korlogos|jcarlson|\benema.combatant\b|\bnode1\b|\bnode2\b|\bfw1\b|\bsw1\b|\bpbx1\b|\bz590\b|\bbig-boi\b" "$@" && echo "BLOCKED: Real identifiers found" && exit 1 || exit 0' --
+        language: system
+        types: [text]
+        exclude: '\.anonymize\.sed$'
+
+      - id: no-private-ips
+        name: Check for non-anonymized private IPs
+        entry: bash -c 'grep -nP "172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+" "$@" && echo "BLOCKED: Non-anonymized private IPs found" && exit 1 || exit 0' --
+        language: system
+        types: [text]
+        exclude: '\.anonymize\.sed$'
+
+      - id: no-credential-patterns
+        name: Check for credential patterns
+        entry: bash -c 'grep -nPi "password\s*[:=]\s*[^\s<{][^\s]{5,}|api[_-]?key\s*[:=]\s*[0-9a-f]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}" "$@" && echo "BLOCKED: Potential credentials found" && exit 1 || exit 0' --
+        language: system
+        types: [text]
+        exclude: '\.anonymize\.sed$'
