@@ -78,10 +78,20 @@ arc/
 
 ---
 <!--
-MAINTENANCE NOTES (for Claude Code):
-- Update this file at the END of every working session
+MAINTENANCE NOTES:
+
+Claude Code:
+- Update this file at the END of every working session (direct push to main)
 - Keep entries concise — this is consumed by an LLM with finite context
 - Move completed items promptly; stale entries waste Claude Web's attention
 - The "Decisions Made" section prevents re-litigation — use it liberally
 - "Ready for Claude Web" should include file paths and specific asks
+
+Claude Web:
+- Update this file ON YOUR WORKING BRANCH as part of your PR
+- Move your task from "Ready for Claude Web" → "In Progress" when you start
+- Add open questions to "Open Questions" as you discover them
+- Move your task to "Recently Completed" when your PR is ready for review
+- Your STATUS.md changes are reviewed alongside your content changes
+- Do NOT create a separate PR just for STATUS.md updates
 -->

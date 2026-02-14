@@ -4,7 +4,10 @@ These instructions apply to all AI agents (Claude Code, Claude Web) working on t
 
 ## Status & Handoff
 
-**Read `STATUS.md` first.** It contains current session state, what's in progress, what's ready for work, settled decisions, and files that should not be modified without review. Claude Code updates it at the end of every working session.
+**Read `STATUS.md` first.** It contains current session state, what's in progress, what's ready for work, settled decisions, and files that should not be modified without review.
+
+- **Claude Code** updates STATUS.md at the end of every working session (direct push to main).
+- **Claude Web** updates STATUS.md on its working branch as part of the same PR as its content changes. Move your task from "Ready for Claude Web" to "In Progress", add open questions, note completions. The STATUS.md diff is reviewed alongside the content diff.
 
 ## Branch Rules
 
