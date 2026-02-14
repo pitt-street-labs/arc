@@ -2,6 +2,10 @@
 
 These instructions apply to all AI agents (Claude Code, Claude Web) working on this repository.
 
+## Status & Handoff
+
+**Read `STATUS.md` first.** It contains current session state, what's in progress, what's ready for work, settled decisions, and files that should not be modified without review. Claude Code updates it at the end of every working session.
+
 ## Branch Rules
 
 **NEVER push directly to `main`.** All changes must arrive via pull request.
