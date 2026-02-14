@@ -1,0 +1,29 @@
+# Build artifacts
+lab-manuals/out/
+*.pdf
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Anonymization tooling (internal use)
+.anonymize.sed
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Model files (too large for git)
+*.gguf
+*.safetensors
+*.bin
+models/

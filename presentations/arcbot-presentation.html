@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCbot — User Stories & Interface Design</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --pip-green: #30ff6e;
+    --pip-green-dim: #1a9e3f;
+    --pip-green-dark: #0d4f20;
+    --pip-green-glow: rgba(48, 255, 110, 0.5);
+    --pip-amber: #ffb830;
+    --pip-amber-dim: #9e7a1a;
+    --pip-red: #ff3030;
+    --pip-bg: #0a0e0a;
+    --pip-bg-panel: #0d120d;
+    --pip-border: #1a3a1a;
+    --sidebar-width: 240px;
+    --scanline-opacity: 0.03;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--pip-bg);
+    color: var(--pip-green);
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Scanline overlay on main ── */
+  .main-content::before {
+    content: '';
+    position: fixed;
+    top: 0; left: var(--sidebar-width); right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--pip-bg-panel);
+    border-right: 1px solid var(--pip-border);
+    overflow-y: auto;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pip-green-dark) var(--pip-bg-panel);
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--pip-border);
+    flex-shrink: 0;
+  }
+
+  .sidebar-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--pip-green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--pip-green-glow);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-header .subtitle {
+    font-size: 9px;
+    color: var(--pip-green-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 8px 0;
+    flex: 1;
+  }
+
+  .toc-list li {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .toc-list li.active {
+    border-left-color: var(--pip-green);
+    background: rgba(48, 255, 110, 0.05);
+  }
+
+  .toc-list a {
+    display: block;
+    padding: 10px 16px;
+    color: var(--pip-green-dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+  }
+
+  .toc-list a:hover {
+    color: var(--pip-green);
+    background: rgba(48, 255, 110, 0.03);
+  }
+
+  .toc-list li.active a {
+    color: var(--pip-green);
+    text-shadow: 0 0 6px var(--pip-green-glow);
+  }
+
+  .toc-section-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    color: var(--pip-green-dark);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .toc-list li.active .toc-section-num {
+    color: var(--pip-green-dim);
+  }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--pip-border);
+    font-size: 8px;
+    color: var(--pip-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  /* ── Main Content ── */
+  .main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    position: relative;
+  }
+
+  /* ── Sections ── */
+  .slide-section {
+    min-height: 100vh;
+    padding: 60px 60px 80px;
+    border-bottom: 1px solid var(--pip-border);
+    position: relative;
+    max-width: 1200px;
+  }
+
+  .slide-section:last-child {
+    border-bottom: none;
+  }
+
+  .section-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    color: var(--pip-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--pip-green);
+    text-shadow: 0 0 20px var(--pip-green-glow);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--pip-green-dim);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* ── Title Slide ── */
+  .title-slide {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    padding: 60px;
+  }
+
+  .title-slide .main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--pip-green);
+    text-shadow: 0 0 40px var(--pip-green-glow), 0 0 80px rgba(48, 255, 110, 0.2);
+    margin-bottom: 12px;
+    letter-spacing: 4px;
+  }
+
+  .title-slide .main-subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: var(--pip-green-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .title-slide .intro-text {
+    font-size: 14px;
+    color: var(--pip-green-dim);
+    max-width: 640px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+  }
+
+  .key-stats {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-block {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--pip-green);
+    text-shadow: 0 0 12px var(--pip-green-glow);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--pip-green-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* ── Story Cards ── */
+  .story-card {
+    background: var(--pip-bg-panel);
+    border: 1px solid var(--pip-border);
+    border-left: 3px solid var(--pip-green-dim);
+    padding: 24px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  .story-id {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    color: var(--pip-green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 6px var(--pip-green-glow);
+  }
+
+  .story-quote {
+    font-size: 14px;
+    color: var(--pip-green);
+    font-style: italic;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    padding-left: 16px;
+    border-left: 2px solid var(--pip-green-dark);
+  }
+
+  .story-refs {
+    font-size: 10px;
+    color: var(--pip-green-dark);
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .story-detail-heading {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    color: var(--pip-green-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 16px;
+    margin-bottom: 6px;
+  }
+
+  .story-detail-text {
+    font-size: 12px;
+    color: var(--pip-green-dim);
+    line-height: 1.7;
+  }
+
+  .role-badge {
+    display: inline-block;
+    background: var(--pip-green-dark);
+    color: var(--pip-green);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    border: 1px solid var(--pip-green-dim);
+  }
+
+  /* ── Screenshot Row ── */
+  .screenshot-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .screenshot-container {
+    position: relative;
+    width: 320px;
+    flex-shrink: 0;
+  }
+
+  .screenshot-container img {
+    width: 320px;
+    display: block;
+    border: 1px solid var(--pip-border);
+    box-shadow: 0 0 20px rgba(48, 255, 110, 0.08);
+  }
+
+  .screenshot-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    color: var(--pip-green-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ── Annotation Markers ── */
+  .anno-marker {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: var(--pip-bg);
+    border: 2px solid var(--pip-green);
+    border-radius: 50%;
+    color: var(--pip-green);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px var(--pip-green-glow);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ── Legend ── */
+  .annotation-legend {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: var(--pip-bg-panel);
+    border: 1px solid var(--pip-border);
+  }
+
+  .legend-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    color: var(--pip-green-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 6px 24px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .legend-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    background: var(--pip-bg);
+    border: 1px solid var(--pip-green);
+    border-radius: 50%;
+    color: var(--pip-green);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+  }
+
+  .legend-screenshot-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    color: var(--pip-green);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-top: 8px;
+  }
+
+  .legend-screenshot-label:first-child {
+    margin-top: 0;
+  }
+
+  .legend-text {
+    color: var(--pip-green-dim);
+  }
+
+  /* ── Tables ── */
+  .pip-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 11px;
+  }
+
+  .pip-table th {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    color: var(--pip-green);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--pip-green-dark);
+    background: rgba(48, 255, 110, 0.03);
+  }
+
+  .pip-table td {
+    padding: 8px 12px;
+    color: var(--pip-green-dim);
+    border-bottom: 1px solid var(--pip-border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .pip-table tr:hover td {
+    background: rgba(48, 255, 110, 0.02);
+  }
+
+  .pip-table .svc-tag {
+    display: inline-block;
+    background: var(--pip-green-dark);
+    color: var(--pip-green-dim);
+    font-size: 9px;
+    padding: 1px 6px;
+    margin: 1px 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Heat Map ── */
+  .heat-cell {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+
+  .heat-high {
+    color: var(--pip-green);
+    text-shadow: 0 0 6px var(--pip-green-glow);
+  }
+
+  .heat-med {
+    color: var(--pip-green-dim);
+  }
+
+  .heat-low {
+    color: var(--pip-green-dark);
+  }
+
+  .heat-none {
+    color: #0d1a0d;
+  }
+
+  /* ── GP Section ── */
+  .gp-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .gp-feature {
+    background: var(--pip-bg-panel);
+    border: 1px solid var(--pip-border);
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--pip-green-dim);
+    min-width: 140px;
+  }
+
+  .gp-feature .svc-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    color: var(--pip-green);
+    display: block;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--pip-border);
+    margin: 32px 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .screenshot-row {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .sidebar {
+      display: none;
+    }
+    .main-content {
+      margin-left: 0;
+    }
+    .slide-section {
+      padding: 40px 24px 60px;
+    }
+    .title-slide .main-title {
+      font-size: 28px;
+    }
+    .key-stats {
+      gap: 20px;
+    }
+    .stat-value {
+      font-size: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SIDEBAR                                         -->
+<!-- ════════════════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar" aria-label="Table of Contents">
+  <div class="sidebar-header">
+    <h1>ARCbot</h1>
+    <div class="subtitle">Presentation Deck</div>
+  </div>
+  <ul class="toc-list" id="toc-list">
+    <li class="active" data-section="sec-title">
+      <a href="#sec-title">
+        <span class="toc-section-num">00</span>
+        Title
+      </a>
+    </li>
+    <li data-section="sec-food-water">
+      <a href="#sec-food-water">
+        <span class="toc-section-num">01</span>
+        Food &amp; Water
+      </a>
+    </li>
+    <li data-section="sec-protection">
+      <a href="#sec-protection">
+        <span class="toc-section-num">02</span>
+        Protection &amp; Security
+      </a>
+    </li>
+    <li data-section="sec-administration">
+      <a href="#sec-administration">
+        <span class="toc-section-num">03</span>
+        Administration
+      </a>
+    </li>
+    <li data-section="sec-shelter">
+      <a href="#sec-shelter">
+        <span class="toc-section-num">04</span>
+        Shelter &amp; Facilities
+      </a>
+    </li>
+    <li data-section="sec-energy">
+      <a href="#sec-energy">
+        <span class="toc-section-num">05</span>
+        Energy &amp; Power
+      </a>
+    </li>
+    <li data-section="sec-specialized">
+      <a href="#sec-specialized">
+        <span class="toc-section-num">06</span>
+        Specialized Services
+      </a>
+    </li>
+    <li data-section="sec-general">
+      <a href="#sec-general">
+        <span class="toc-section-num">07</span>
+        General Population
+      </a>
+    </li>
+    <li data-section="sec-summary">
+      <a href="#sec-summary">
+        <span class="toc-section-num">08</span>
+        Summary &amp; Mapping
+      </a>
+    </li>
+  </ul>
+  <div class="sidebar-footer">
+    ARC v0.1 &mdash; Design Phase
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT                                    -->
+<!-- ════════════════════════════════════════════════ -->
+<main class="main-content" id="main-content">
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 0: TITLE SLIDE                      -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section title-slide" id="sec-title">
+    <div class="section-label">Section 00</div>
+    <h2 class="main-title">ARCbot</h2>
+    <div class="main-subtitle">ARC Basic Operational Terminal &bull; Android Portrait &bull; Pip-Boy UX</div>
+
+    <p class="intro-text">
+      ARCbot brings the full ARC service stack to Android phones, giving every role in a 150-person
+      post-collapse community a tailored mobile interface. Role-based filtering surfaces only the tabs,
+      data, and alerts relevant to each person's function. Offline-first architecture ensures full
+      operation when mesh bandwidth is the only connectivity. AI-assisted decision support via the
+      4-tier ARCengine scales from Raspberry Pi triage to full-server RAG synthesis.
+    </p>
+
+    <div class="key-stats">
+      <div class="stat-block">
+        <span class="stat-value">97</span>
+        <span class="stat-label">Services</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-value">44</span>
+        <span class="stat-label">Roles</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-value">6</span>
+        <span class="stat-label">Groups</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-value">1.9 TB</span>
+        <span class="stat-label">Corpus</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-value">4-Tier</span>
+        <span class="stat-label">AI Engine</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 1: FOOD & WATER                     -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-food-water">
+    <div class="section-label">Section 01 &mdash; 5 Roles</div>
+    <h2 class="section-title">Food &amp; Water</h2>
+    <p class="section-subtitle">
+      Water Treatment Specialist &bull; Head Cook &bull; Livestock Manager &bull; Forager &bull; Food Preservation Specialist
+    </p>
+
+    <!-- Story FW-1 -->
+    <div class="story-card">
+      <div class="story-id">FW-1 &mdash; Water Treatment Specialist</div>
+      <div class="story-quote">
+        "As a Water Treatment Specialist, I need to quickly assess water source safety and treatment
+        requirements from the field, so I can make safe collection decisions without returning to base."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-01 &bull; User Stories US-10, US-14</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        STAT tab shows water reserve levels and quality alerts. MAP tab shows water source POIs with safety status
+        color coding. AI tab provides WHO-sourced treatment guidance with full source citations from the Kiwix corpus.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">FW-WTS</span>. Quick Reference shortcuts pre-loaded with
+        WHO Water Standards, Filtration Manual. INV shows water treatment equipment and test kit levels.
+      </p>
+    </div>
+
+    <!-- Story FW-2 -->
+    <div class="story-card">
+      <div class="story-id">FW-2 &mdash; Head Cook</div>
+      <div class="story-quote">
+        "As a Head Cook planning meals for 150 people, I need real-time inventory visibility and recipe
+        suggestions based on available stock, so I can minimize waste and maximize nutrition."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-02 &bull; User Stories US-14, US-31</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        INV tab shows Grocy community stores with calorie counts and expiration warnings. DATA tab
+        surfaces Tandoor recipes filtered by available ingredients. DUTY tab shows kitchen shift roster.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">FW-CKL</span>. Quick Reference shortcuts: Nutrition Tables,
+        Preservation Guide, Recipe Index. Alerts prioritize food expiration and supply shortages.
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-stat.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-stat.png" alt="STAT tab showing water reserve levels and quality alerts">
+        <div class="anno-marker" style="top: 22%; left: 55%;">1</div>
+        <div class="anno-marker" style="top: 34%; left: 70%;">2</div>
+        <div class="anno-marker" style="top: 48%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 8%; left: 75%;">4</div>
+        <div class="screenshot-label">STAT Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-inv.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-inv.png" alt="INV tab showing personal loadout and community stores">
+        <div class="anno-marker" style="top: 15%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 35%; left: 65%;">2</div>
+        <div class="anno-marker" style="top: 55%; left: 35%;">3</div>
+        <div class="anno-marker" style="top: 68%; left: 70%;">4</div>
+        <div class="screenshot-label">INV Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-ai.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-ai.png" alt="AI tab with WHO treatment guidance and source citations">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 26%; left: 30%;">2</div>
+        <div class="anno-marker" style="top: 48%; left: 65%;">3</div>
+        <div class="anno-marker" style="top: 78%; left: 55%;">4</div>
+        <div class="screenshot-label">AI Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">STAT Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Water Reserve "3.2 days" warning indicator</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Water Quality Advisory alert card</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Nutrition status bar at 54%</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Role badge "Water Treatment Spec."</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">INV Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Personal loadout water canteen level</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Role Equipment with turbidity test kit "LOW" badge</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Community Stores from Grocy showing purified water liters</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Chlorine tablet count for treatment</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">AI Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Natural language query input</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Role-specific quick prompts "Water Safety"</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">AI response with WHO treatment steps</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Source citation tags (Kiwix, FarmOS, Atlas, Grocy)</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 2: PROTECTION & SECURITY            -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-protection">
+    <div class="section-label">Section 02 &mdash; 9 Roles</div>
+    <h2 class="section-title">Protection &amp; Security</h2>
+    <p class="section-subtitle">
+      Security Chief &bull; Watch Commander &bull; Gate Guard &bull; Armorer &bull; Scout &bull;
+      SIGINT Operator &bull; Intelligence Analyst &bull; Defensive Engineer &bull; Combat Medic
+    </p>
+
+    <!-- Story PS-1 -->
+    <div class="story-card">
+      <div class="story-id">PS-1 &mdash; Watch Commander</div>
+      <div class="story-quote">
+        "As a Watch Commander responding to a perimeter alert, I need an integrated view of camera feeds,
+        terrain, and communication channels so I can assess threats and coordinate response without
+        switching between systems."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-09 &bull; User Stories US-04, US-05</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        SEC tab shows Frigate NVR zone status in a 4-quadrant grid with color-coded threat levels.
+        MAP tab overlays camera fields of view on terrain with contour data. COMMS tab provides
+        one-tap emergency broadcast via FreePBX + ntfy push notifications.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">PS-WCO</span>. DEFCON level prominently displayed.
+        Security log auto-refreshes. Alerts prioritize motion detection and perimeter breaches.
+        Bottom nav SEC tab shows persistent alert count badge.
+      </p>
+    </div>
+
+    <!-- Story PS-2 -->
+    <div class="story-card">
+      <div class="story-id">PS-2 &mdash; Scout</div>
+      <div class="story-quote">
+        "As a Scout planning a recon patrol, I need offline maps with terrain data, known hazard zones,
+        and mesh communication coverage, so I can plan safe routes and maintain contact with base."
+      </div>
+      <div class="story-refs">Refs: User Stories US-12, US-13</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        MAP tab shows Atlas satellite tiles with exclusion zones (red), waypoints, and mesh node
+        coverage radius overlay. COMMS tab shows Meshtastic relay range and active node count.
+        INV shows personal loadout including ammo, water, rations, and radio status.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">PS-RCN</span>. MAP shows patrol-specific POIs.
+        Quick actions: "Mark Waypoint", "Route to Base", "Report Contact". STAT shows individual
+        condition (hydration, fatigue) critical for field operations.
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-sec-full.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-sec-full.png" alt="SEC tab showing perimeter status and security log">
+        <div class="anno-marker" style="top: 18%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 30%; left: 75%;">2</div>
+        <div class="anno-marker" style="top: 55%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 8%; left: 60%;">4</div>
+        <div class="screenshot-label">SEC Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-map.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-map.png" alt="MAP tab with exclusion zones and terrain overlay">
+        <div class="anno-marker" style="top: 30%; left: 35%;">1</div>
+        <div class="anno-marker" style="top: 45%; left: 55%;">2</div>
+        <div class="anno-marker" style="top: 60%; left: 30%;">3</div>
+        <div class="anno-marker" style="top: 85%; left: 50%;">4</div>
+        <div class="anno-marker" style="top: 20%; left: 70%;">5</div>
+        <div class="screenshot-label">MAP Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-comms.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-comms.png" alt="COMMS tab with channels and mesh status">
+        <div class="anno-marker" style="top: 15%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 32%; left: 60%;">2</div>
+        <div class="anno-marker" style="top: 52%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 82%; left: 55%;">4</div>
+        <div class="screenshot-label">COMMS Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">SEC Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Perimeter Status 4-zone grid from Frigate NVR</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">East Fence amber "Motion" alert indicator</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Security log with timestamped events</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">DEFCON Level 4 large display</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">MAP Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Exclusion zone (red dot) with radiation warning</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Base position with crosshair marker</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Creek #3 advisory marker (amber)</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">GPS coordinates and scale bar</span></div>
+        <div class="legend-item"><span class="legend-num">5</span> <span class="legend-text">Topo contour overlay with elevation lines</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">COMMS Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Command Net CH1 with "MONITOR" badge</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Meshtastic relay "3 NODES" with range</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">XMPP message feed with timestamps</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Quick Comms "Emergency" action button</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 3: ADMINISTRATION                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-administration">
+    <div class="section-label">Section 03 &mdash; 8 Roles</div>
+    <h2 class="section-title">Administration</h2>
+    <p class="section-subtitle">
+      Community Director &bull; Medical Officer &bull; Nurse &bull; Logistics Officer &bull;
+      Records Clerk &bull; Judge &bull; Treasurer &bull; HR Manager
+    </p>
+
+    <!-- Story AD-1 -->
+    <div class="story-card">
+      <div class="story-id">AD-1 &mdash; Community Director</div>
+      <div class="story-quote">
+        "As a Community Director, I need a single dashboard showing population status, resource reserves,
+        DEFCON level, and active alerts across all groups, so I can make informed leadership decisions."
+      </div>
+      <div class="story-refs">Refs: User Stories US-18, US-20</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        STAT tab shows full community overview: population count, DEFCON status, power state, water and
+        food reserves with days-remaining projections. Alerts section aggregates priority notifications
+        from all six groups. DUTY tab shows cross-group roster overview.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">AD-DIR</span>. All alerts visible (not filtered to a
+        single group). Community Status section expanded with additional metrics. COMMS shows all channels,
+        not just group-specific.
+      </p>
+    </div>
+
+    <!-- Story AD-2 -->
+    <div class="story-card">
+      <div class="story-id">AD-2 &mdash; Logistics Coordinator</div>
+      <div class="story-quote">
+        "As a Logistics Coordinator, I need to track supply levels, pending requests, and distribution
+        schedules across all community stores, so I can prevent shortages before they become emergencies."
+      </div>
+      <div class="story-refs">Refs: User Stories US-14, US-19</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        INV tab shows aggregated Grocy stores across all categories (food, water, medical, ammo, fuel)
+        with threshold warnings. COMMS shows pending supply requests from ntfy push notifications.
+        AI tab answers resource planning queries with multi-source synthesis.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">AD-LOG</span>. INV shows cross-group inventory (not
+        limited to a single group). Alerts highlight items below minimum thresholds. Quick actions:
+        "Approve Request", "Schedule Distribution", "Inventory Audit".
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-stat.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-stat.png" alt="STAT tab showing community overview dashboard">
+        <div class="anno-marker" style="top: 16%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 8%; left: 70%;">2</div>
+        <div class="anno-marker" style="top: 28%; left: 35%;">3</div>
+        <div class="anno-marker" style="top: 38%; left: 65%;">4</div>
+        <div class="anno-marker" style="top: 55%; left: 50%;">5</div>
+        <div class="screenshot-label">STAT Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-duty.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-duty.png" alt="DUTY tab showing roster and task management">
+        <div class="anno-marker" style="top: 15%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 30%; left: 70%;">2</div>
+        <div class="anno-marker" style="top: 50%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 72%; left: 55%;">4</div>
+        <div class="screenshot-label">DUTY Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-ai.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-ai.png" alt="AI tab for resource planning queries">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 38%; left: 55%;">2</div>
+        <div class="anno-marker" style="top: 65%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 82%; left: 65%;">4</div>
+        <div class="screenshot-label">AI Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">STAT Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Population "147/150" count</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">DEFCON "4 - NORMAL" status indicator</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Power Status showing active sources</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Water/Food reserve days with warning colors</span></div>
+        <div class="legend-item"><span class="legend-num">5</span> <span class="legend-text">Alert cards with priority classification</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">DUTY Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Group-specific roster with shift times</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Assignment and status columns</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Vikunja task list with priority markers</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Cross-training card showing backup role coverage</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">AI Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Query input for resource planning</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Multi-source AI response with synthesis</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Source citation tags showing service integration</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Processing tier showing current ARCengine capacity</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 4: SHELTER & FACILITIES             -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-shelter">
+    <div class="section-label">Section 04 &mdash; 8 Roles</div>
+    <h2 class="section-title">Shelter &amp; Facilities</h2>
+    <p class="section-subtitle">
+      Facilities Manager &bull; Carpenter &bull; Electrician &bull; Plumber &bull; Welder &bull;
+      3D Print Operator &bull; Sanitation Engineer &bull; Salvage Coordinator
+    </p>
+
+    <!-- Story SF-1 -->
+    <div class="story-card">
+      <div class="story-id">SF-1 &mdash; 3D Print Operator</div>
+      <div class="story-quote">
+        "As a 3D Print Operator, I need to search the model library for replacement parts, check filament
+        stock, and queue print jobs from my phone, so I can keep the fabrication pipeline running without
+        tying up a workstation."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-03 &bull; User Stories US-28, US-29</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        DATA tab shows 3D Print Library (193,000+ models via Manyfold/3D Search) with search and queue
+        position display. INV tab shows InvenTree filament stock levels with spool weight tracking.
+        AI tab helps match part descriptions to printable models using semantic search.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">SF-3DP</span>. Quick Reference shortcuts: Print Settings,
+        Material Specs, Model Search. DATA tab prioritizes 3D library and repair manuals over
+        medical/agricultural references.
+      </p>
+    </div>
+
+    <!-- Story SF-2 -->
+    <div class="story-card">
+      <div class="story-id">SF-2 &mdash; Electrician</div>
+      <div class="story-quote">
+        "As an Electrician, I need instant access to NEC wiring tables, voltage calculations, and available
+        wire stock, so I can spec and execute electrical work safely in the field."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-04 &bull; User Stories US-22</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        AI tab provides NEC-sourced wire gauge calculations with safety factors. DATA tab surfaces
+        Stack Overflow electrical references and Kiwix NEC tables. INV tab shows InvenTree wire and
+        component stock with gauge and length tracking.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">SF-ELC</span>. Quick Reference shortcuts: NEC Tables,
+        Wiring Diagrams, Safety Protocols. AI quick prompts: "Wire Gauge Calc", "Breaker Sizing",
+        "Grounding Req".
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-data.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-data.png" alt="DATA tab showing quick reference and library access">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 30%; left: 35%;">2</div>
+        <div class="anno-marker" style="top: 45%; left: 65%;">3</div>
+        <div class="anno-marker" style="top: 60%; left: 40%;">4</div>
+        <div class="anno-marker" style="top: 75%; left: 55%;">5</div>
+        <div class="screenshot-label">DATA Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-inv.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-inv.png" alt="INV tab showing equipment and community stores">
+        <div class="anno-marker" style="top: 12%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 32%; left: 60%;">2</div>
+        <div class="anno-marker" style="top: 55%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 70%; left: 70%;">4</div>
+        <div class="screenshot-label">INV Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-ai.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-ai.png" alt="AI tab with technical guidance and source citations">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 24%; left: 35%;">2</div>
+        <div class="anno-marker" style="top: 50%; left: 60%;">3</div>
+        <div class="anno-marker" style="top: 80%; left: 45%;">4</div>
+        <div class="screenshot-label">AI Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">DATA Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Quick Reference role-specific shortcuts</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Kiwix Library with Stack Overflow for engineering</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">3D Print Library with 193k+ model count</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Moodle training course progress</span></div>
+        <div class="legend-item"><span class="legend-num">5</span> <span class="legend-text">Calibre digital library access</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">INV Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Personal loadout grid</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Role Equipment list with status badges</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Community Stores tiles showing stock levels</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">"LOW" warning badge on depleted items</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">AI Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Technical query input</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Quick prompt buttons for role-specific queries</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Detailed AI response with step-by-step guidance</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Source tags showing Kiwix + InvenTree integration</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 5: ENERGY & POWER                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-energy">
+    <div class="section-label">Section 05 &mdash; 6 Roles</div>
+    <h2 class="section-title">Energy &amp; Power</h2>
+    <p class="section-subtitle">
+      Solar Technician &bull; Generator Mechanic &bull; Battery Specialist &bull;
+      Power Distribution &bull; Fuel Analyst &bull; Wind/Hydro Technician
+    </p>
+
+    <!-- Story EP-1 -->
+    <div class="story-card">
+      <div class="story-id">EP-1 &mdash; Solar Technician</div>
+      <div class="story-quote">
+        "As a Solar Technician, I need to monitor panel output trends, diagnose performance drops,
+        and access troubleshooting guides from the field, so I can maintain power generation without
+        waiting for IT support."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-05 &bull; User Stories US-02</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        STAT tab shows power status (solar + generator active state) with trend indicators.
+        AI tab provides diagnostic guidance from Home Assistant historical data and Kiwix troubleshooting
+        references. DATA tab surfaces solar installation manuals from the Calibre library.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">EP-SOL</span>. STAT community status expanded to show
+        detailed power metrics. Alerts prioritize power threshold warnings. Quick Reference: Solar
+        Maintenance, Inverter Specs, Battery State.
+      </p>
+    </div>
+
+    <!-- Story EP-2 -->
+    <div class="story-card">
+      <div class="story-id">EP-2 &mdash; Generator Mechanic</div>
+      <div class="story-quote">
+        "As a Generator Mechanic, I need maintenance schedules, parts inventory, and oil specification
+        references accessible while working on equipment, so I can complete service without leaving the
+        generator room."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-06 &bull; User Stories US-03</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        DUTY tab shows maintenance schedule from Vikunja with due dates and priority markers.
+        INV tab shows InvenTree parts and fluid stock levels. DATA tab surfaces Calibre engine
+        manuals and Kiwix technical references for generator systems.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">EP-GEN</span>. DUTY tasks filtered to generator
+        maintenance. INV shows fuel reserves, oil stock, filter inventory. AI quick prompts:
+        "Oil Change Interval", "Filter Spec", "Fault Code Lookup".
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-stat.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-stat.png" alt="STAT tab showing power status and community reserves">
+        <div class="anno-marker" style="top: 28%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 40%; left: 60%;">2</div>
+        <div class="anno-marker" style="top: 18%; left: 70%;">3</div>
+        <div class="anno-marker" style="top: 55%; left: 50%;">4</div>
+        <div class="screenshot-label">STAT Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-data.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-data.png" alt="DATA tab with reference materials and training">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 30%; left: 40%;">2</div>
+        <div class="anno-marker" style="top: 48%; left: 60%;">3</div>
+        <div class="anno-marker" style="top: 65%; left: 45%;">4</div>
+        <div class="screenshot-label">DATA Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-duty.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-duty.png" alt="DUTY tab with maintenance schedules and roster">
+        <div class="anno-marker" style="top: 15%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 38%; left: 55%;">2</div>
+        <div class="anno-marker" style="top: 55%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 72%; left: 60%;">4</div>
+        <div class="screenshot-label">DUTY Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">STAT Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Power Status "Solar + Gen #2" showing active sources</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Community status reserve indicators</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Shift rotation display</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Alert cards for power-related advisories</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">DATA Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Role-specific Quick Reference buttons</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Stack Overflow engineering reference</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Practical Action / IFIXIT repair guides</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Training courses relevant to energy systems</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">DUTY Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Shift roster for energy group</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Vikunja maintenance tasks with priorities</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Due dates and assignment tracking</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Cross-training roles showing backup coverage</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 6: SPECIALIZED SERVICES             -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-specialized">
+    <div class="section-label">Section 06 &mdash; 8 Roles</div>
+    <h2 class="section-title">Specialized Services</h2>
+    <p class="section-subtitle">
+      Educator &bull; Radio Operator &bull; IT Admin &bull; Mechanic &bull;
+      Farmer &bull; Pharmacist &bull; Drone Operator &bull; Childcare
+    </p>
+
+    <!-- Story SS-1 -->
+    <div class="story-card">
+      <div class="story-id">SS-1 &mdash; Radio Operator</div>
+      <div class="story-quote">
+        "As a Radio Operator monitoring communications, I need to see all active channels, mesh node
+        status, and signal analysis tools in one view, so I can maintain communication security and
+        relay messages efficiently."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-14 &bull; User Stories US-05, US-11</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        COMMS tab shows all radio channels with activity status, Meshtastic mesh topology with node
+        count and range indicators. AI tab provides frequency identification from Kiwix amateur radio
+        database. MAP shows mesh coverage overlay with dead zones.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">SS-COM</span>. COMMS shows expanded channel list
+        including all nets (not just group-specific). Quick actions: "Log Signal", "Relay Message",
+        "Emergency Broadcast". Alerts prioritize unknown signals and mesh node dropouts.
+      </p>
+    </div>
+
+    <!-- Story SS-2 -->
+    <div class="story-card">
+      <div class="story-id">SS-2 &mdash; Educator</div>
+      <div class="story-quote">
+        "As an Educator creating lesson plans, I need to pull content from the knowledge library,
+        structure it into Moodle courses, and track student progress, all from a mobile interface
+        while teaching."
+      </div>
+      <div class="story-refs">Refs: ARC Role Story RS-12 &bull; User Stories US-26, US-27</div>
+
+      <div class="story-detail-heading">Interface</div>
+      <p class="story-detail-text">
+        DATA tab shows Moodle course management with progress tracking, Kiwix reference library for
+        content sourcing across 77 ZIM archives. AI tab helps generate lesson outlines from corpus
+        content. STAT shows student attendance and progress metrics.
+      </p>
+
+      <div class="story-detail-heading">Filtering</div>
+      <p class="story-detail-text">
+        Role badge shows <span class="role-badge">SS-EDU</span>. DATA tab prioritizes Kiwix educational
+        content, Moodle courses, Calibre textbooks. Quick Reference: Lesson Templates, Assessment Rubrics,
+        Curriculum Standards. AI quick prompts: "Create Lesson Plan", "Quiz Generator", "Age-Appropriate Content".
+      </p>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="screenshot-row">
+      <!-- Screenshot 1: tab-comms.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-comms.png" alt="COMMS tab with channel list and mesh status">
+        <div class="anno-marker" style="top: 15%; left: 45%;">1</div>
+        <div class="anno-marker" style="top: 35%; left: 60%;">2</div>
+        <div class="anno-marker" style="top: 55%; left: 40%;">3</div>
+        <div class="anno-marker" style="top: 82%; left: 50%;">4</div>
+        <div class="screenshot-label">COMMS Tab</div>
+      </div>
+
+      <!-- Screenshot 2: tab-data.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-data.png" alt="DATA tab with Kiwix and Moodle integration">
+        <div class="anno-marker" style="top: 28%; left: 40%;">1</div>
+        <div class="anno-marker" style="top: 50%; left: 55%;">2</div>
+        <div class="anno-marker" style="top: 68%; left: 45%;">3</div>
+        <div class="anno-marker" style="top: 12%; left: 60%;">4</div>
+        <div class="screenshot-label">DATA Tab</div>
+      </div>
+
+      <!-- Screenshot 3: tab-ai.png -->
+      <div class="screenshot-container">
+        <img src="assets/tab-ai.png" alt="AI tab with lesson generation and multi-source synthesis">
+        <div class="anno-marker" style="top: 12%; left: 50%;">1</div>
+        <div class="anno-marker" style="top: 24%; left: 35%;">2</div>
+        <div class="anno-marker" style="top: 50%; left: 60%;">3</div>
+        <div class="anno-marker" style="top: 82%; left: 55%;">4</div>
+        <div class="screenshot-label">AI Tab</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+
+      <div class="legend-screenshot-label">COMMS Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Active channel list with CH designations</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Meshtastic mesh status with node count</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">XMPP message feed for async comms</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Quick Comms action bar for rapid response</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">DATA Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Kiwix Library as knowledge backbone</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Moodle training with course progress</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Digital library via Calibre</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Quick Reference for role-specific shortcuts</span></div>
+      </div>
+
+      <div class="legend-screenshot-label">AI Tab</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Natural language query for any domain</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Role-adapted quick prompt suggestions</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Multi-source synthesized response</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">ARCengine tier and throughput display</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 7: GENERAL POPULATION               -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-general">
+    <div class="section-label">Section 07 &mdash; ~100 People</div>
+    <h2 class="section-title">General Population</h2>
+    <p class="section-subtitle">
+      Read-only access to community knowledge, entertainment, and communication services.
+      No operational or security permissions.
+    </p>
+
+    <div class="story-card" style="border-left-color: var(--pip-green-dark);">
+      <div class="story-id">GP &mdash; Community Members</div>
+      <p class="story-detail-text" style="margin-bottom: 16px;">
+        Approximately 100 community members without specialized roles receive a simplified ARCbot
+        interface. The interface provides read-only access to essential services with fewer visible tabs
+        and no access to SEC or DUTY functionality. The DATA tab is limited to reference and entertainment
+        content. Role badge shows <span class="role-badge">GP-MEM</span>.
+      </p>
+
+      <div class="story-detail-heading">Available Services</div>
+      <div class="gp-features">
+        <div class="gp-feature">
+          <span class="svc-name">Kiwix</span>
+          Offline encyclopedia, references
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Moodle</span>
+          Student-mode course access
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Jellyfin</span>
+          Video library, media streaming
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Navidrome</span>
+          Music library, audio streaming
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Nextcloud</span>
+          File sharing, personal storage
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">XMPP</span>
+          Text messaging, group chats
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Wiki.js</span>
+          Community wiki, shared knowledge
+        </div>
+        <div class="gp-feature">
+          <span class="svc-name">Anki</span>
+          Spaced-repetition flashcards
+        </div>
+      </div>
+
+      <div class="story-detail-heading">Interface Differences</div>
+      <p class="story-detail-text">
+        Fewer tabs visible in the bottom navigation bar. No SEC tab (security monitoring is restricted
+        to Protection &amp; Security group). No DUTY tab (shift management is role-based only). DATA tab
+        shows reference and entertainment content but not operational manuals or specialized tooling.
+        COMMS limited to general messaging channels. STAT shows personal condition only, not community-wide
+        operational data.
+      </p>
+    </div>
+
+    <!-- Single Screenshot -->
+    <div class="screenshot-row" style="justify-content: center;">
+      <div class="screenshot-container">
+        <img src="assets/tab-data.png" alt="DATA tab in GP-limited view">
+        <div class="anno-marker" style="top: 28%; left: 40%;">1</div>
+        <div class="anno-marker" style="top: 50%; left: 55%;">2</div>
+        <div class="anno-marker" style="top: 68%; left: 45%;">3</div>
+        <div class="anno-marker" style="top: 12%; left: 65%;">4</div>
+        <div class="screenshot-label">DATA Tab (GP View)</div>
+      </div>
+    </div>
+
+    <div class="annotation-legend">
+      <div class="legend-title">Annotation Legend</div>
+      <div class="legend-screenshot-label">DATA Tab (GP-Limited View)</div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-num">1</span> <span class="legend-text">Kiwix Library — encyclopedia and general reference only</span></div>
+        <div class="legend-item"><span class="legend-num">2</span> <span class="legend-text">Moodle — student view with course enrollment, no admin</span></div>
+        <div class="legend-item"><span class="legend-num">3</span> <span class="legend-text">Calibre — ebooks and entertainment reading</span></div>
+        <div class="legend-item"><span class="legend-num">4</span> <span class="legend-text">Quick Reference — limited to GP-approved shortcuts (no operational manuals)</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SECTION 8: SUMMARY & SERVICE MAPPING        -->
+  <!-- ════════════════════════════════════════════ -->
+  <section class="slide-section" id="sec-summary">
+    <div class="section-label">Section 08</div>
+    <h2 class="section-title">Summary &amp; Service Mapping</h2>
+    <p class="section-subtitle">
+      Cross-reference of all 12 user stories to the ARC services they integrate, and a tab usage
+      heat map showing interface patterns by group.
+    </p>
+
+    <!-- Story-to-Service Mapping Table -->
+    <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--pip-green); margin-bottom: 16px; letter-spacing: 1px;">
+      User Story &rarr; Service Mapping
+    </h3>
+
+    <table class="pip-table">
+      <thead>
+        <tr>
+          <th>Story</th>
+          <th>Role</th>
+          <th>US Refs</th>
+          <th>ARC Services Touched</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>FW-1</td>
+          <td>Water Treatment Specialist</td>
+          <td>US-10, US-14</td>
+          <td>
+            <span class="svc-tag">Grocy</span>
+            <span class="svc-tag">Atlas</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">FarmOS</span>
+            <span class="svc-tag">InvenTree</span>
+          </td>
+        </tr>
+        <tr>
+          <td>FW-2</td>
+          <td>Head Cook</td>
+          <td>US-14, US-31</td>
+          <td>
+            <span class="svc-tag">Grocy</span>
+            <span class="svc-tag">Tandoor</span>
+            <span class="svc-tag">Vikunja</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">ARCengine</span>
+          </td>
+        </tr>
+        <tr>
+          <td>PS-1</td>
+          <td>Watch Commander</td>
+          <td>US-04, US-05</td>
+          <td>
+            <span class="svc-tag">Frigate</span>
+            <span class="svc-tag">Atlas</span>
+            <span class="svc-tag">FreePBX</span>
+            <span class="svc-tag">ntfy</span>
+            <span class="svc-tag">XMPP</span>
+            <span class="svc-tag">Mosquitto</span>
+          </td>
+        </tr>
+        <tr>
+          <td>PS-2</td>
+          <td>Scout</td>
+          <td>US-12, US-13</td>
+          <td>
+            <span class="svc-tag">Atlas</span>
+            <span class="svc-tag">Meshtastic</span>
+            <span class="svc-tag">Grocy</span>
+            <span class="svc-tag">InvenTree</span>
+            <span class="svc-tag">Home Assistant</span>
+          </td>
+        </tr>
+        <tr>
+          <td>AD-1</td>
+          <td>Community Director</td>
+          <td>US-18, US-20</td>
+          <td>
+            <span class="svc-tag">Grocy</span>
+            <span class="svc-tag">Vikunja</span>
+            <span class="svc-tag">ntfy</span>
+            <span class="svc-tag">Home Assistant</span>
+            <span class="svc-tag">FreePBX</span>
+            <span class="svc-tag">XMPP</span>
+          </td>
+        </tr>
+        <tr>
+          <td>AD-2</td>
+          <td>Logistics Coordinator</td>
+          <td>US-14, US-19</td>
+          <td>
+            <span class="svc-tag">Grocy</span>
+            <span class="svc-tag">InvenTree</span>
+            <span class="svc-tag">ntfy</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Vikunja</span>
+          </td>
+        </tr>
+        <tr>
+          <td>SF-1</td>
+          <td>3D Print Operator</td>
+          <td>US-28, US-29</td>
+          <td>
+            <span class="svc-tag">Manyfold</span>
+            <span class="svc-tag">3D Search</span>
+            <span class="svc-tag">InvenTree</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Kiwix</span>
+          </td>
+        </tr>
+        <tr>
+          <td>SF-2</td>
+          <td>Electrician</td>
+          <td>US-22</td>
+          <td>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">InvenTree</span>
+            <span class="svc-tag">Calibre</span>
+          </td>
+        </tr>
+        <tr>
+          <td>EP-1</td>
+          <td>Solar Technician</td>
+          <td>US-02</td>
+          <td>
+            <span class="svc-tag">Home Assistant</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">Calibre</span>
+            <span class="svc-tag">Grafana</span>
+          </td>
+        </tr>
+        <tr>
+          <td>EP-2</td>
+          <td>Generator Mechanic</td>
+          <td>US-03</td>
+          <td>
+            <span class="svc-tag">Vikunja</span>
+            <span class="svc-tag">InvenTree</span>
+            <span class="svc-tag">Calibre</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">ARCengine</span>
+          </td>
+        </tr>
+        <tr>
+          <td>SS-1</td>
+          <td>Radio Operator</td>
+          <td>US-05, US-11</td>
+          <td>
+            <span class="svc-tag">Meshtastic</span>
+            <span class="svc-tag">FreePBX</span>
+            <span class="svc-tag">XMPP</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">Atlas</span>
+          </td>
+        </tr>
+        <tr>
+          <td>SS-2</td>
+          <td>Educator</td>
+          <td>US-26, US-27</td>
+          <td>
+            <span class="svc-tag">Moodle</span>
+            <span class="svc-tag">Kiwix</span>
+            <span class="svc-tag">Calibre</span>
+            <span class="svc-tag">ARCengine</span>
+            <span class="svc-tag">Wiki.js</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <!-- Tab Usage Heat Map -->
+    <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--pip-green); margin: 32px 0 16px; letter-spacing: 1px;">
+      Tab Usage Heat Map by Group
+    </h3>
+
+    <table class="pip-table">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th class="heat-cell">STAT</th>
+          <th class="heat-cell">INV</th>
+          <th class="heat-cell">DATA</th>
+          <th class="heat-cell">MAP</th>
+          <th class="heat-cell">COMMS</th>
+          <th class="heat-cell">AI</th>
+          <th class="heat-cell">MED</th>
+          <th class="heat-cell">DUTY</th>
+          <th class="heat-cell">SEC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Food &amp; Water</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+        </tr>
+        <tr>
+          <td>Protection &amp; Security</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-high">HIGH</td>
+        </tr>
+        <tr>
+          <td>Administration</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-low">LOW</td>
+        </tr>
+        <tr>
+          <td>Shelter &amp; Facilities</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+        </tr>
+        <tr>
+          <td>Energy &amp; Power</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+        </tr>
+        <tr>
+          <td>Specialized Services</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+        </tr>
+        <tr>
+          <td>General Population</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+          <td class="heat-cell heat-high">HIGH</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+          <td class="heat-cell heat-med">MED</td>
+          <td class="heat-cell heat-low">LOW</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+          <td class="heat-cell heat-none">&mdash;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <!-- Key Takeaways -->
+    <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--pip-green); margin: 32px 0 16px; letter-spacing: 1px;">
+      Key Takeaways
+    </h3>
+
+    <div class="story-card" style="border-left-color: var(--pip-green);">
+      <div class="story-detail-heading">Most-Used Services Across All Stories</div>
+      <p class="story-detail-text" style="margin-bottom: 12px;">
+        <span class="svc-tag">ARCengine</span> appears in 9 of 12 stories &mdash; the AI layer is the
+        universal interface.<br>
+        <span class="svc-tag">Kiwix</span> appears in 8 of 12 &mdash; offline knowledge is the foundation.<br>
+        <span class="svc-tag">Grocy</span> and <span class="svc-tag">InvenTree</span> appear in 6 each &mdash;
+        inventory tracking touches every operational group.<br>
+        <span class="svc-tag">Vikunja</span> appears in 4 &mdash; task management is primarily administrative
+        and maintenance-oriented.
+      </p>
+
+      <div class="story-detail-heading">Tab Design Implications</div>
+      <p class="story-detail-text" style="margin-bottom: 12px;">
+        <strong>AI tab</strong> is universally HIGH or MED &mdash; every role benefits from natural-language
+        access to the ARC corpus. Must be fast and always available.<br>
+        <strong>INV tab</strong> is the second most used &mdash; supply chain visibility is critical for
+        community survival.<br>
+        <strong>SEC tab</strong> is exclusively Protection &amp; Security with minimal Admin overlap &mdash;
+        properly gated by role-based filtering.<br>
+        <strong>DATA tab</strong> is the primary GP interface &mdash; knowledge access scales down gracefully.
+      </p>
+
+      <div class="story-detail-heading">Architecture Validation</div>
+      <p class="story-detail-text">
+        The 12 user stories across 6 groups + GP collectively touch 20 distinct ARC services, confirming
+        that the single ARCbot interface pattern (one app, role-filtered views) is viable. No story
+        requires switching between multiple applications. The Pip-Boy metaphor (tabs as primary navigation)
+        maps naturally to the 8-tab structure, with role-based filtering controlling which tabs are visible
+        and what data appears within each.
+      </p>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT: TOC Active State + Scroll Tracking  -->
+<!-- ════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  const tocItems = document.querySelectorAll('.toc-list li');
+  const sections = [];
+
+  // Build section list from TOC data-section attributes
+  tocItems.forEach(function(item) {
+    const sectionId = item.getAttribute('data-section');
+    const sectionEl = document.getElementById(sectionId);
+    if (sectionEl) {
+      sections.push({ id: sectionId, element: sectionEl, tocItem: item });
+    }
+  });
+
+  // Intersection Observer for active TOC highlighting
+  var currentActive = null;
+
+  var observer = new IntersectionObserver(function(entries) {
+    // Find the section most visible in the viewport
+    var visibleSections = [];
+
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        visibleSections.push({
+          id: entry.target.id,
+          ratio: entry.intersectionRatio,
+          top: entry.boundingClientRect.top
+        });
+      }
+    });
+
+    // Use scroll position to determine active section
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var windowHeight = window.innerHeight;
+    var bestMatch = null;
+    var bestDistance = Infinity;
+
+    sections.forEach(function(sec) {
+      var rect = sec.element.getBoundingClientRect();
+      var sectionTop = rect.top + scrollTop;
+      var distance = Math.abs(scrollTop - sectionTop);
+
+      // Prefer sections whose top is at or above viewport top
+      if (rect.top <= windowHeight * 0.4 && rect.bottom > 0) {
+        if (!bestMatch || sectionTop > (bestMatch.offsetTop || 0)) {
+          bestMatch = sec;
+          bestMatch.offsetTop = sectionTop;
+        }
+      }
+    });
+
+    if (!bestMatch && sections.length > 0) {
+      bestMatch = sections[0];
+    }
+
+    if (bestMatch && bestMatch.id !== currentActive) {
+      currentActive = bestMatch.id;
+      tocItems.forEach(function(item) {
+        item.classList.remove('active');
+      });
+      bestMatch.tocItem.classList.add('active');
+
+      // Scroll TOC item into view if needed
+      bestMatch.tocItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, {
+    threshold: [0, 0.1, 0.25, 0.5],
+    rootMargin: '0px 0px -50% 0px'
+  });
+
+  sections.forEach(function(sec) {
+    observer.observe(sec.element);
+  });
+
+  // Fallback: scroll event for more reliable tracking
+  var scrollTimeout;
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(function() {
+      var scrollTop = window.scrollY || document.documentElement.scrollTop;
+      var windowHeight = window.innerHeight;
+      var bestMatch = null;
+
+      sections.forEach(function(sec) {
+        var rect = sec.element.getBoundingClientRect();
+        if (rect.top <= windowHeight * 0.4 && rect.bottom > 0) {
+          bestMatch = sec;
+        }
+      });
+
+      if (!bestMatch && sections.length > 0) {
+        bestMatch = sections[0];
+      }
+
+      if (bestMatch && bestMatch.id !== currentActive) {
+        currentActive = bestMatch.id;
+        tocItems.forEach(function(item) {
+          item.classList.remove('active');
+        });
+        bestMatch.tocItem.classList.add('active');
+        bestMatch.tocItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }, 50);
+  }, { passive: true });
+
+  // Smooth scroll for TOC clicks (offset for fixed elements)
+  document.querySelectorAll('.toc-list a').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var targetId = this.getAttribute('href').substring(1);
+      var target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
