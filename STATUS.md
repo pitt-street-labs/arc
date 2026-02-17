@@ -4,22 +4,18 @@
 ARC (Assisted Reconstitution of Civilization): post-cataclysm framework for rebuilding human civilization. ARC.ai = analytical engine. ARC.instance = Dunbar-numbered (~150) population unit. See README.md for full vision.
 
 ## Last Updated
-2026-02-14 21:00 UTC by Claude Code
+2026-02-17 by Claude Code
 
 ## Session Summary
-Initial repo scaffolding complete. 65 files across 4 workstreams pushed to GitHub. Repo made public. Branch protection enabled. Three-methodology security audit completed and all findings remediated.
+Established Claude Code ↔ Claude Web handoff protocol. STATUS.md is now the shared state file — Claude Code pushes to main at session end, Claude Web updates on working branches (merged with content PRs). Updated Claude Web project instructions to match.
 
 ## Recently Completed
-- Scaffolded repo with 4 workstreams: design/, disaster-recovery/, lab-manuals/, halops/
-- Anonymized 14 ARC design documents from internal project
-- Created DR rebuild guide framework (21 chapter templates + 6 capture scripts + 3 maintenance scripts)
-- Created lab manuals PDF toolkit (Pandoc+XeLaTeX template, Lua filter, 3 example manuals)
-- Created HALops methodology docs (session-to-SFT pipeline, QLoRA approach, eval framework, pipeline overview)
-- Ran 3-methodology security audit (gitleaks, custom pattern scan, content classification + threat model)
-- Fixed 6 anonymization gaps found by audit
-- Added security mechanisms: pre-commit hooks, CI workflow, CODEOWNERS, SECURITY.md
-- Made repo public, enabled branch protection (1 required review, dismiss stale)
-- Added CLAUDE.md instructions and PR template
+- Repo scaffolded: 65+ files across design/, disaster-recovery/, lab-manuals/, halops/, presentations/
+- 3-methodology security audit (gitleaks, pattern scan, threat model) — all findings fixed
+- Security mechanisms: pre-commit hooks, CI workflow, CODEOWNERS, SECURITY.md, PR template
+- Repo made public, branch protection enabled
+- STATUS.md handoff protocol established (both sides read/write)
+- CLAUDE.md + Claude Web project instructions finalized
 
 ## In Progress
 - Nothing currently
@@ -43,6 +39,8 @@ Initial repo scaffolding complete. 65 files across 4 workstreams pushed to GitHu
 - [2026-02-14] Branch protection: 1 required review, dismiss stale reviews, admins exempt
 - [2026-02-14] STATUS.md updated at end of session only (not start)
 - [2026-02-14] CLAUDE.md = permanent policy, STATUS.md = session-specific state (two layers, some overlap OK)
+- [2026-02-17] Claude Web updates STATUS.md on working branches (option 3 — merged with content PRs)
+- [2026-02-17] Claude Web project instructions finalized (includes branch rules, anonymization, STATUS.md protocol)
 
 ## Open Questions
 - Should the presentations/ directory grow, or is the single arcbot HTML a one-off?
